@@ -1,1 +1,1 @@
-# Complete 50 subscriber's on our telegram then I giveawayvertus bot script
+# Complete 50 subscriber's on our telegram then I giveaway vertus bot script
