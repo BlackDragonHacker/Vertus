@@ -3,7 +3,7 @@ import json
 import time
 import os
 
-# Function to read tokens from token.txt
+# Function to read tokens from data.txt
 def read_tokens(filename):
     with open(filename, 'r') as f:
         tokens = f.read().strip().splitlines()
@@ -88,13 +88,13 @@ def fetch_initial_data(token):
     url = 'https://api.thevertus.app/users/get-data'
     payload = {}
 
-    response = requests.post(url, headers=headers, json=payload)
-
-    if response.status_code == 201:
+    try:
+        response = requests.post(url, headers=headers, json=payload)
+        response.raise_for_status()
         data = json.loads(response.text)
         return data
-    else:
-        print(f'Error fetching initial data: HTTP {response.status_code} - {response.text}')
+    except requests.exceptions.RequestException as e:
+        print(f'\033[1;91mConnection error\033[0m')
         return None
 
 # Function to claim daily bonus
@@ -117,19 +117,21 @@ def claim_daily_bonus(token):
     url = 'https://api.thevertus.app/users/claim-daily'
     payload = {}
 
-    response = requests.post(url, headers=headers, json=payload)
-
-    if response.status_code == 201:
-        print(f'\033[92m Daily Bonus claimed successful\033[0m')
-    elif response.status_code == 409:
-        print(f'\033[93m Daily Bonus already claimed\033[0m')
-    else:
-        print(f'\033[1;91mError claiming Daily Bonus: HTTP {response.status_code} - {response.text}\033[0m')
+    try:
+        response = requests.post(url, headers=headers, json=payload)
+        if response.status_code == 201:
+            print(f'\033[92m Daily Bonus claimed successful\033[0m')
+        elif response.status_code == 409:
+            print(f'\033[93m Daily Bonus already claimed\033[0m')
+        else:
+            print(f'\033[1;91mConnection error claiming Daily Bonus: HTTP {response.status_code} - {response.text}\033[0m')
+    except requests.exceptions.RequestException as e:
+        print(f'\033[1;91mConnection error claiming Daily Bonus: {e}\033[0m')
 
 # Main function to claim tokens for each account
 def claim_tokens():
     while True:  # Loop to continuously claim tokens
-        tokens = read_tokens('token.txt')  # Read tokens from file
+        tokens = read_tokens('data.txt')  # Read tokens from file
         
         initial_data_list = []
         for token in tokens:
@@ -175,49 +177,53 @@ def claim_tokens():
             payload = {}
 
             # Making POST request to claim tokens
-            response = requests.post(url, headers=headers, json=payload)
+            try:
+                response = requests.post(url, headers=headers, json=payload)
+                response.raise_for_status()
 
-            # Print response for each account
-            print(f'\033[96m\033[1m------Account {index}------\033[0m')
+                # Print response for each account
+                print(f'\033[96m\033[1m------Account {index}------\033[0m')
 
-            if response.status_code == 201:
-                try:
-                    data = json.loads(response.text)
-                    new_balance = data.get('newBalance', '')
+                if response.status_code == 201:
+                    try:
+                        data = json.loads(response.text)
+                        new_balance = data.get('newBalance', '')
 
-                    # Calculate balance as per your requirement
-                    if new_balance:
-                        balance = float(new_balance) / 1e18  # Divide by 10^18 as per your requirement
-                        print(f'\033[1;95m VERT Balance: {balance}\033[0m')
-                        print(f'\033[92m VERT Claimed Successful\033[0m')  # Print "Claimed Successful" upon success
-                    else:
-                        print(f'\033[1;91mError: No newBalance in response\033[0m')
-                except json.JSONDecodeError:
-                    print(f'\033[1;91mError: Invalid JSON response\033[0m')
-            else:
-                print(f'\033[1;91mError: HTTP {response.status_code} - {response.text}\033[0m')
+                        # Calculate balance as per your requirement
+                        if new_balance:
+                            balance = float(new_balance) / 1e18  # Divide by 10^18 as per your requirement
+                            print(f'\033[1;95m VERT Balance: {balance}\033[0m')
+                            print(f'\033[92m VERT Claimed Successful\033[0m')  # Print "Claimed Successful" upon success
+                        else:
+                            print(f'\033[1;91mError: No newBalance in response\033[0m')
+                    except json.JSONDecodeError:
+                        print(f'\033[1;91mError: Invalid JSON response\033[0m')
+                else:
+                    print(f'\033[1;91mError: HTTP {response.status_code} - {response.text}\033[0m')
 
-            # Claim the daily bonus for the current account
-            claim_daily_bonus(token)
+                # Claim the daily bonus for the current account
+                claim_daily_bonus(token)
 
-            # Display countdown before processing next account
-            if index < len(tokens):
-                display_countdown(5)  # Wait for 5 seconds before processing next account
+                # Display countdown before processing next account
+                if index < len(tokens):
+                    display_countdown(5)  # Wait for 5 seconds before processing next account
+
+            except requests.exceptions.RequestException as e:
+                print(f'\033[1;91mConnection error\033[0m')
 
         # After processing all accounts, wait before claiming tokens again
         print("\nWaiting before claiming tokens again...\n")
-        display_countdown(300)  # Wait for 60 seconds before claiming tokens again
+        display_countdown(300)  # Wait for 300 seconds before claiming tokens again
 
 # Print ASCII art before running the main function
-        print_ascii_art1()
-        print_ascii_art2()
-        print_ascii_art3()
-        print_ascii_art4()
-        print_ascii_art5()
-        print_ascii_art6()
-        print_ascii_art7()
-        print_ascii_art8()
+print_ascii_art1()
+print_ascii_art2()
+print_ascii_art3()
+print_ascii_art4()
+print_ascii_art5()
+print_ascii_art6()
+print_ascii_art7()
+print_ascii_art8()
 
-# Run the main function
-if __name__ == '__main__':
-    claim_tokens()
+# Start claiming tokens
+claim_tokens()
