@@ -1,0 +1,32 @@
+# Ignore Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ignore environment files
+.env
+*.env
+
+# Ignore token files (ensure you never expose your tokens)
+data.txt
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore IDE-specific files
+.vscode/
+.idea/
+
+# Ignore OS generated files
+.DS_Store
+*.log
+*.bak
+*.swp
+*.tmp
+
+# Ignore other user-specific files
+*.bak
+*.old
+*.log
+*.swp
